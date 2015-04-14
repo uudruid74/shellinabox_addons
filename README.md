@@ -23,6 +23,9 @@ and the html-embedded shell are connected.  Each has a "shell" and
 left of the shell.  If either switches to the same tab as the other,
 then both screens update simultaneously until you switch to the other.
 
+ScreenShot256.jpg shows typing in both windows (need not be on the
+same machine).  And shows the mixdown from 256 colors to 16.
+
 The backend is versioned (just in case) and so your URLs should be
 of the format of ...
 
