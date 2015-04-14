@@ -1,0 +1,114 @@
+#!/bin/bash
+#
+# Controlled spawner program for shellinabox
+#   by Evan Langlois  uudruid74@gmail.com
+# license given to whatever you want with it
+#
+
+# Choose which session manager you want (byobu wraps tmux)
+#MGR="tmux"
+MGR="byobu"
+
+# Session name (change this to a username for multi-user)
+SESSION="Draven"
+
+# Where do the errors go?
+LOGFILE="/tmp/session.log"
+
+
+#- Fixes some bugs in shell-in-a-box
+export PATH="/root/bin:$PATH:/usr/sbin:/sbin"
+
+open() {
+  if tmux has-session -t "$SESSION" 2>/dev/null 1>&2; then
+    if tmux find-window -t "$SESSION" -N $1 2>/dev/null; then
+      tmux attach-session -t "$SESSION" \; find-window -N $1
+    else
+      $MGR attach-session -d -t "$SESSION" \; new-window -n $1 "$2"
+    fi
+  else
+  	$MGR new-session -AD -n $1 -s "$SESSION" "$2"
+  fi
+}
+
+shell() {
+  if tmux has-session -t "$SESSION" 2>/dev/null 1>&2; then
+    if tmux find-window -t "$SESSION" -N $1 2>/dev/null; then
+      tmux attach-session -t "$SESSION" \; find-window -N $1
+    else
+  	  $MGR attach-session -d -t "$SESSION" \; new-window -n $1 /bin/bash \; send-keys "exec $2" \; send-keys enter
+  	fi
+  else
+    $MGR new-session -AD -n $1 -s "$SESSION" /bin/bash \; send-keys "exec $2" \; send-keys enter
+  fi
+}
+
+switch() {
+  if tmux has-session -t "$SESSION" 2>/dev/null 1>&2; then
+    if tmux find-window -t "$SESSION" -N $1 2>/dev/null; then
+    	tmux attach-session -d -t "$SESSION" \; find-window -N $1
+    	return 0
+    fi
+  fi
+  return 1
+}
+
+#- Get the command from the URL
+URL=${URL##*\?}
+if [[ -z $URL ]]; then
+	echo Invalid Url
+	echo "$(date) INVALID URL $SESSION/$PEER $URL" >>$LOGFILE
+	exit
+else
+	export DRAVEN_INSTALL_COMMAND=${URL##*\&}
+	export DRAVEN_INSTALL_VERSION=${URL%${DRAVEN_INSTALL_COMMAND}}
+	DRAVEN_INSTALL_VERSION=${DRAVEN_INSTALL_VERSION%\&}
+fi
+
+#- We use the PEER variable to log the remote IP.
+echo "$(date) Remote $SESSION/$PEER is trying to run $URL" >>$LOGFILE
+unset URL
+
+#- Set Window Title in byobu toolbar
+if [[ $MGR == "byobu" ]]; then
+	echo -ne "\033k${DRAVEN_INSTALL_COMMAND}\033\\"
+fi
+
+#- Only specific commands
+case "$DRAVEN_INSTALL_COMMAND" in
+	shell)
+		if ! switch shell; then
+			cat /etc/motd
+			echo "Most UNIX commands are available.  Use C-a for tmux commands"
+			echo "Remember to close the window when you are through"
+			echo "Control-Click the Shell button again to get another terminal"
+			echo "Press Enter to Begin and type \"exit\" when done"
+			read enter
+			open shell /bin/bash
+		fi
+		;;
+	cfdisk)
+		if ! switch disk; then
+			killall cgdisk cfdisk gparted 2>/dev/null
+			echo "Be careful!  Make backups before you proceed!"
+			echo "Hit Enter to continue"
+			read enter
+			shell disk "/sbin/cgdisk"
+		fi
+		;;
+	network)
+		if ! switch net; then
+			echo This will be a dialog app that sets your network
+			echo It will ask if you want to write the files to /etc to make it permanent
+			echo Hit Enter to begin
+			read enter
+			open net /bin/bash
+		fi
+		;;
+	*)
+		echo "Sorry, you aren't allowed to run that!"
+		sleep 5
+		exit
+		;;
+esac
+

@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# This runs a new session that is connected to the web session
+# They share windows, but each can operate independantly.  This
+# allows you to watch each other when both sessions are set to
+# the same window but be able to work in separate windows as well
+# Its kinda cool!
+#
+# Note, set mgr based on what you want to run locally.  It doesn't
+# have to match what installcmd is running!!
+
+MGR="byobu" 			#- Or tmux
+WEBSESSION="Draven"     #- Session in the web interface
+NEWSESSION="WebShell" 	#- The local session name
+
+#exec byobu new-session  -AD -s DravenTerm -t Draven
+$MGR new-session -AD -s "$NEWSESSION" -t "$WEBSESSION"
+
+
