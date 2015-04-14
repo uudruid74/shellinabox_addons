@@ -26,16 +26,15 @@ then both screens update simultaneously until you switch to the other.
 The backend is versioned (just in case) and so your URLs should be
 of the format of ...
 
- /shell/?0.1&command
-
- 	... version & command to run
+	/shell/?0.1&command
+        ... version & command to run
 
 The command to run must be configured in the installcmd backend which
 is currently in /root/bin, but feel free to adjust the shellinabox
 start-up to look for it elsewhere.
 
 
-	 * * *  WARNING * * * 			 * * * WARNING * * * 
+#	 * * *  WARNING * * * 			 * * * WARNING * * * 		#
 
 SECURITY WARNING:  This was set up for a web-based installer that
 assumes a single user with root access.  You should change this to
